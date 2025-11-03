@@ -19,32 +19,37 @@ class GameApp extends StatefulWidget {
 
 class _GameAppState extends State<GameApp> {
   late final BrickBreaker game;
+  late BuildContext _scaffoldContext;
 
   @override
   void initState() {
     super.initState();
     game = BrickBreaker();
-    game.onGameOver = _handleGameOver;
   }
 
   void _handleGameOver(int score) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => PlayerNameDialog(
-        score: score,
-        onSubmit: (name) async {
-          await SupabaseService.saveScore(
-            playerName: name,
+    // Use WidgetsBinding to ensure we're in the next frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        showDialog(
+          context: _scaffoldContext,
+          barrierDismissible: false,
+          builder: (context) => PlayerNameDialog(
             score: score,
-          );
-        },
-      ),
-    );
+            onSubmit: (name) async {
+              await SupabaseService.saveScore(
+                playerName: name,
+                score: score,
+              );
+            },
+          ),
+        );
+      }
+    });
   }
 
   void _showLeaderboard() {
-    Navigator.of(context).push(
+    Navigator.of(_scaffoldContext).push(
       MaterialPageRoute(
         builder: (context) => const LeaderboardScreen(),
       ),
@@ -61,7 +66,13 @@ class _GameAppState extends State<GameApp> {
           displayColor: const Color(0xff184e77),
         ),
       ),
-      home: Scaffold(
+      home: Builder(
+        builder: (context) {
+          // Assign the callback here where we have access to the context
+          game.onGameOver = _handleGameOver;
+          _scaffoldContext = context;
+          
+          return Scaffold(
         body: Stack(
           children: [
             Container(
@@ -127,6 +138,8 @@ class _GameAppState extends State<GameApp> {
             ),
           ],
         ),
+          );
+        },
       ),
     );
   }
