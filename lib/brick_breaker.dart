@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 
 import 'src/components/components.dart';
 import 'src/config.dart';
+import 'src/services/audio_service.dart';
 
 enum PlayState { welcome, playing, gameOver, won }
 
@@ -24,6 +25,7 @@ class BrickBreaker extends FlameGame
 
   final ValueNotifier<int> score = ValueNotifier(0);
   final rand = math.Random();
+  final AudioService audioService = AudioService();
   double get width => size.x;
   double get height => size.y;
 
@@ -35,17 +37,24 @@ class BrickBreaker extends FlameGame
     _playState = playState;
     switch (playState) {
       case PlayState.welcome:
+        overlays.add(playState.name);
+        audioService.stopBackgroundMusic();
       case PlayState.gameOver:
         overlays.add(playState.name);
-        if (playState == PlayState.gameOver && onGameOver != null) {
+        audioService.stopBackgroundMusic();
+        audioService.playGameOverSound();
+        if (onGameOver != null) {
           onGameOver!(score.value);
         }
       case PlayState.won:
         overlays.add(playState.name);
+        audioService.stopBackgroundMusic();
+        audioService.playWinSound();
       case PlayState.playing:
         overlays.remove(PlayState.welcome.name);
         overlays.remove(PlayState.gameOver.name);
         overlays.remove(PlayState.won.name);
+        audioService.playBackgroundMusic();
     }
   }
 
@@ -56,6 +65,9 @@ class BrickBreaker extends FlameGame
     camera.viewfinder.anchor = Anchor.topLeft;
 
     world.add(PlayArea());
+    
+    // Inicializar el servicio de audio
+    await audioService.initialize();
 
     playState = PlayState.welcome;
   }

@@ -72,6 +72,9 @@ class Ball extends CircleComponent
         velocity.x = -velocity.x;
       }
       velocity.setFrom(velocity * difficultyModifier);
+      
+      // Reproducir sonido de golpe al ladrillo
+      game.audioService.playBrickHitSound();
     }
   }
 }
