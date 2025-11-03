@@ -27,6 +27,8 @@ class BrickBreaker extends FlameGame
   double get width => size.x;
   double get height => size.y;
 
+  Function(int score)? onGameOver;
+
   late PlayState _playState;
   PlayState get playState => _playState;
   set playState(PlayState playState) {
@@ -34,6 +36,10 @@ class BrickBreaker extends FlameGame
     switch (playState) {
       case PlayState.welcome:
       case PlayState.gameOver:
+        overlays.add(playState.name);
+        if (playState == PlayState.gameOver && onGameOver != null) {
+          onGameOver!(score.value);
+        }
       case PlayState.won:
         overlays.add(playState.name);
       case PlayState.playing:
